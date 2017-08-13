@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test-old": "nyc --reporter=html --reporter=text mocha --recursive --compilers js:babel-register test/spec/",
-    "test": "rm -rf out/* && tsc && nyc --reporter=html --reporter=text mocha --require source-map-support/register --ui mocha-typescript --recursive out/test/spec/"
+    "test": "npm run build && nyc --reporter=html --reporter=text mocha --require source-map-support/register --ui mocha-typescript --recursive out/test/spec/",
+    "server": "npm run build && node ./out/src/index.js",
+    "build": "rm -rf out/* && tsc"
   },
   "author": "Matt James <matthew.stephen.james@gmail.com>",
   "license": "ISC",
@@ -17,8 +18,11 @@
     "@types/morgan": "^1.7.32",
     "@types/node-uuid": "0.0.28",
     "@types/promise": "^7.1.30",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
     "immutable": "^3.8.1",
     "knex": "^0.13.0",
+    "morgan": "^1.8.2",
     "node-uuid": "^1.4.8",
     "pg": "^7.1.2"
   },
@@ -30,8 +34,10 @@
     "babel-preset-stage-0": "^6.24.1",
     "babel-register": "^6.24.1",
     "chai": "^4.1.1",
+    "chai-http": "^3.0.0",
     "mocha": "^3.5.0",
     "mocha-typescript": "^1.1.7",
+    "nodemon": "^1.11.0",
     "nyc": "^11.1.0",
     "typescript": "^2.4.2",
     "typings": "^2.1.1"

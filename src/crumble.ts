@@ -27,14 +27,17 @@ export class DBStore {
         });
     }
 
-    async createReadModel(readModel, initialState){
-        this.knex.raw('create schema if not exists "crumble"');
-        await this.knex.schema.withSchema('crumble').createTableIfNotExists(`${readModel}_read_model`, function (table) {
+    async createReadModel(readModelName, initialState){
+        await this.knex.raw('create schema if not exists "crumble"');
+        await this.knex.schema.withSchema('crumble').createTableIfNotExists(`${readModelName}_read_model`, function (table) {
             table.increments();
             table.integer('last_id');
             table.json('state');
-        })
-        await this.snapshot(readModel, initialState);
+        });
+        const count = await this.knex.withSchema('crumble').table(`${readModelName}_read_model`).count('*');
+        if(count[0].count==0){
+            await this.snapshot(readModelName, initialState);
+        }
     }
 
     async add(eventStore, event){
@@ -144,7 +147,9 @@ class ReadModels {
         const snapshot = await this.store.latestSnapshot(model.name);
         const events = await this.store.readEvents(model.eventStore, snapshot.last_id+1);
         if(events.length>0){
-            const state = events.map(e=>e.event).reduce(model.fn, fromJS(snapshot.state));
+            const state = events.map(e=>e.event).reduce((state,event)=>{
+                return fromJS(model.fn(state,event));
+            }, fromJS(snapshot.state));
             const lastId = events[events.length-1].id;
             return this.store.snapshot(model.name, state.toJS(), lastId);
         }
@@ -157,6 +162,7 @@ export default class Crumble {
     constructor(simple=false){
         this.store = simple ? new SimpleStore() : new DBStore();
         this.readModels = new ReadModels(this.store);
+        setInterval(()=>this.updateReadModels(),1000);
     }
     uuid(){
         return uuid.v4();

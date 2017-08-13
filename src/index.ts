@@ -6,7 +6,7 @@ import bodyParser = require('body-parser');
 import morgan = require('morgan');
 
 var app = express();
-app.use(morgan('combined'))
+// app.use(morgan('combined'))
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('./public'));
@@ -17,3 +17,4 @@ createReadModels(crumble);
 createServices(app, crumble);
 
 app.listen(3000, ()=>console.log('listening on port 3000!'));
+export default app;

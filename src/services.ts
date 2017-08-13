@@ -4,26 +4,26 @@ export default (app, crumble) => {
         return (await crumble.getReadModel('all-todos')).some(t=>t.uuid===id);
     }
 
-    app.get('/todos', async (req,res) => {
+    app.get('/api/todos', async (req,res) => {
         res.json(await crumble.getReadModel('all-todos'));
     });
 
-    app.put('/todos/create', async (req,res) => {
-        await crumble.addEvent('items', {
+    app.put('/api/todos', async (req,res) => {
+        await crumble.addEvent('todos', {
             action: 'create',
             uuid: crumble.uuid(),
-            name: req.query.name
+            name: req.body.name
         });
 
         res.json({result: 'ok'});
     });
 
-    app.post('/todos/{itemId}/update', async (req,res) => {
-        if(await itemExists(req.params.itemId)){
-            await crumble.addEvent('items', {
+    app.post('/api/todos', async (req,res) => {
+        if(await itemExists(req.body.uuid)){
+            await crumble.addEvent('todos', {
                 action: 'update',
-                id: req.params.itemId,
-                name: req.query.name
+                uuid: req.body.uuid,
+                name: req.body.name
             });
             res.json({result: 'ok'});
         } else {
@@ -31,11 +31,11 @@ export default (app, crumble) => {
         }
     });
 
-    app.delete('/todos/{itemId}/delete', async (req,res) => {
-        if(await itemExists(req.params.itemId)){
-            await crumble.addEvent('items', {
+    app.delete('/api/todos', async (req,res) => {
+        if(await itemExists(req.body.uuid)){
+            await crumble.addEvent('todos', {
                 action: 'delete',
-                id: req.params.itemId
+                uuid: req.body.uuid
             });
             res.json({result: 'ok'});
         } else {

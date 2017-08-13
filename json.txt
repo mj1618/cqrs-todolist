@@ -1,0 +1,4 @@
+curl -X GET http://localhost:3000/api/todos
+curl -H "Content-Type: application/json" -X PUT -d '{"name":"First Todo to do"}' http://localhost:3000/api/todos
+curl -H "Content-Type: application/json" -X POST -d '{"uuid":"7f8f87e6-bd8b-4cd5-b28b-1ae61149d328","name":"First Todo updated"}' http://localhost:3000/api/todos
+curl -H "Content-Type: application/json" -X DELETE -d '{"uuid":"7f8f87e6-bd8b-4cd5-b28b-1ae61149d328"}' http://localhost:3000/api/todos
