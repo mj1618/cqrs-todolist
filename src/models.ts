@@ -1,6 +1,6 @@
-export default (crumble)=> {
-    crumble.createEventStore('todos');
-    crumble.createReadModel('all-todos', 'todos', [], (state, event)=>{
+export default async (crumble)=> {
+    await crumble.createEventStore('todos');
+    await crumble.createReadModel('all-todos', 'todos', [], (state, event)=>{
         switch(event.action){
             case 'create':
                 if(!state.some(todo=>todo.get('uuid')===event.uuid)){

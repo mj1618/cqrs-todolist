@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test-old": "nyc --reporter=html --reporter=text mocha --recursive --compilers js:babel-register test/spec/",
-    "test": "tsc && nyc --reporter=html --reporter=text mocha --require source-map-support/register --ui mocha-typescript --recursive out/test/spec/"
+    "test": "rm -rf out/* && tsc && nyc --reporter=html --reporter=text mocha --require source-map-support/register --ui mocha-typescript --recursive out/test/spec/"
   },
   "author": "Matt James <matthew.stephen.james@gmail.com>",
   "license": "ISC",
@@ -19,7 +19,8 @@
     "@types/promise": "^7.1.30",
     "immutable": "^3.8.1",
     "knex": "^0.13.0",
-    "node-uuid": "^1.4.8"
+    "node-uuid": "^1.4.8",
+    "pg": "^7.1.2"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",

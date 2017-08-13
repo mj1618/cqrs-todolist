@@ -19,41 +19,43 @@ export class DBStore {
         });
     }
 
-    createEventStore(eventStore){
-        return this.knex.schema.withSchema('crumble').createTableIfNotExists(`${eventStore}_events`, function (table) {
+    async createEventStore(eventStore){
+        this.knex.raw('create schema if not exists "crumble"');
+        await this.knex.schema.withSchema('crumble').dropTableIfExists(`${eventStore}_events`);
+        await this.knex.schema.withSchema('crumble').createTableIfNotExists(`${eventStore}_events`, function (table) {
             table.increments();
             table.json('event');
         });
     }
 
-    createReadModel(readModel, initialState){
-        return this.knex.schema.withSchema('crumble').createTableIfNotExists(`${readModel}_read_model`, function (table) {
+    async createReadModel(readModel, initialState){
+        this.knex.raw('create schema if not exists "crumble"');
+        await this.knex.schema.withSchema('crumble').dropTableIfExists(`${readModel}_read_model`);
+        await this.knex.schema.withSchema('crumble').createTableIfNotExists(`${readModel}_read_model`, function (table) {
             table.increments();
             table.integer('last_id');
-            table.index('last_id');
             table.json('state');
-        }).then(()=>{
-            this.snapshot(readModel, initialState);
-        });
+        })
+        await this.snapshot(readModel, initialState);
     }
 
-    add(eventStore, event){
-        return this.knex.table('${eventStore}_events').insert({event});
+    async add(eventStore, event){
+        await this.knex.withSchema('crumble').table(`${eventStore}_events`).insert({event:JSON.stringify(event)});
     }
 
-    readEvents(eventStore, from=0){
-        return this.knex.select().from('${eventStore}_events').where('id','>',from);
+    async readEvents(eventStore, from=0){
+        return await this.knex.withSchema('crumble').select().from(`${eventStore}_events`).where('id','>=',from);
     }
 
-    snapshot(readModelName, state, lastId=0){
-        return this.knex.table(`${readModelName}_read_model`).insert({
+    async snapshot(readModelName, state, lastId=0){
+        await this.knex.withSchema('crumble').table(`${readModelName}_read_model`).insert({
             last_id: lastId,
-            state,
+            state: JSON.stringify(state),
         });
     }
 
-    latestSnapshot(readModelName){
-        return this.knex.table(`${readModelName}_read_model`).orderBy('id','desc').first();
+    async latestSnapshot(readModelName){
+        return this.knex.withSchema('crumble').table(`${readModelName}_read_model`).orderBy('id','desc').first();
     }
 }
 
@@ -65,7 +67,6 @@ export class SimpleStore {
 
     async createEventStore(eventStore){
         this.tables[`${eventStore}_events`] = [];
-        return Promise.resolve();
     }
 
     async createReadModel(readModel, initialState){
@@ -79,7 +80,6 @@ export class SimpleStore {
             id: this.nextId(eventsTable),
             event
         });
-        return Promise.resolve();
     }
 
     nextId(table){
@@ -92,7 +92,7 @@ export class SimpleStore {
 
     async readEvents(eventStore, from=0){
         const events = this.tables[`${eventStore}_events`].filter(e=>e.id>=from)
-        return Promise.resolve(events);
+        return events;
     }
 
     async snapshot(readModelName, state, lastId=0){
@@ -102,12 +102,11 @@ export class SimpleStore {
             last_id: lastId,
             state: state,
         });
-        return Promise.resolve();
     }
 
     async latestSnapshot(readModelName){
         const readModelTable = this.tables[`${readModelName}_read_model`];
-        return Promise.resolve(readModelTable[readModelTable.length-1]);
+        return readModelTable[readModelTable.length-1];
     }
 }
 
@@ -121,9 +120,9 @@ class ReadModels {
         this.store = store;
     }
 
-    create(name, eventStore, initialState, fn){
-        this.store.createReadModel(name, initialState);
-        this.models.push({
+    async create(name, eventStore, initialState, fn){
+        await this.store.createReadModel(name, initialState);
+        await this.models.push({
             name, 
             eventStore,
             fn
@@ -133,8 +132,7 @@ class ReadModels {
     async get(name){
         const model = this.models.find(m=>m.name===name);
         if(!model){
-            console.log(`cannot find model "${name}"`)
-            return Promise.resolve();
+            console.log(`cannot find model "${name}"`);
         } else {
             return this.store.latestSnapshot(model.name).then(snap=>snap.state);
         }
@@ -158,9 +156,7 @@ class ReadModels {
 export default class Crumble {
     readModels: any;
     store: any;
-    
-    constructor(){
-        const simple = true;
+    constructor(simple=false){
         this.store = simple ? new SimpleStore() : new DBStore();
         this.readModels = new ReadModels(this.store);
     }
@@ -168,27 +164,27 @@ export default class Crumble {
         return uuid.v4();
     }
 
-    createEventStore(name){
-        return this.store.createEventStore(name);
+    async createEventStore(name){
+        await this.store.createEventStore(name);
     }
 
-    createReadModel(name, eventStore, initialState, fn){
-        return this.readModels.create(name, eventStore, initialState, fn);
+    async createReadModel(name, eventStore, initialState, fn){
+        await this.readModels.create(name, eventStore, initialState, fn);
     }
 
-    getReadModel(name){
+    async getReadModel(name){
         return this.readModels.get(name);
     }
 
-    addEvent(model, event){
-        return this.store.add(model, event);
+    async addEvent(model, event){
+        await this.store.add(model, event);
     }
 
-    updateReadModels(){
-        return this.readModels.updateAll();
+    async updateReadModels(){
+        await this.readModels.updateAll();
     }
 
-    getEvents(eventStore, from=0){
-        return this.store.readEvents(eventStore, from);
+    async getEvents(eventStore, from=0){
+        return await this.store.readEvents(eventStore, from);
     }
 }
