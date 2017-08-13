@@ -20,8 +20,7 @@ export class DBStore {
     }
 
     async createEventStore(eventStore){
-        this.knex.raw('create schema if not exists "crumble"');
-        await this.knex.schema.withSchema('crumble').dropTableIfExists(`${eventStore}_events`);
+        await this.knex.raw('create schema if not exists crumble');
         await this.knex.schema.withSchema('crumble').createTableIfNotExists(`${eventStore}_events`, function (table) {
             table.increments();
             table.json('event');
@@ -30,7 +29,6 @@ export class DBStore {
 
     async createReadModel(readModel, initialState){
         this.knex.raw('create schema if not exists "crumble"');
-        await this.knex.schema.withSchema('crumble').dropTableIfExists(`${readModel}_read_model`);
         await this.knex.schema.withSchema('crumble').createTableIfNotExists(`${readModel}_read_model`, function (table) {
             table.increments();
             table.integer('last_id');

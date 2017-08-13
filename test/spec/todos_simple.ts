@@ -4,11 +4,16 @@ import { suite, test, slow, timeout } from "mocha-typescript";
 import chai = require('chai');
 chai.should();
 
+const createCrumble = async ()=>{
+    const crumble = new Crumble(true);
+    await createModels(crumble);
+    return crumble;
+}
+
 @suite class TodosDb {
 
     @test async should_add_todo_to_events_store(){
-        let crumble = new Crumble(true);
-        await createModels(crumble);
+        const crumble = await createCrumble();
         await crumble.addEvent('todos', {
             action: 'create',
             uuid: crumble.uuid(),
@@ -20,8 +25,7 @@ chai.should();
     }
 
     @test async should_add_todo_to_read_model(){
-        let crumble = new Crumble(true);
-        await createModels(crumble);
+        const crumble = await createCrumble();
         await crumble.addEvent('todos', {
             action: 'create',
             uuid: crumble.uuid(),
@@ -33,8 +37,7 @@ chai.should();
     }
 
     @test async update_should_update_read_model(){
-        let crumble = new Crumble(true);
-        await createModels(crumble);
+        const crumble = await createCrumble();
         const uuid = crumble.uuid();
         await crumble.addEvent('todos', {
             action: 'create',
@@ -54,8 +57,7 @@ chai.should();
     }
 
     @test async delete_should_clear_read_model(){
-        let crumble = new Crumble(true);
-        await createModels(crumble);
+        const crumble = await createCrumble();
         const uuid = crumble.uuid();
         await crumble.addEvent('todos', {
             action: 'create',

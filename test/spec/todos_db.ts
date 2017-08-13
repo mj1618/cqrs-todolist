@@ -1,14 +1,31 @@
 import Crumble from '../../src/crumble';
 import createModels from '../../src/models';
+import knex = require('knex');
 import { suite, test, slow, timeout } from "mocha-typescript";
 import chai = require('chai');
 chai.should();
 
+const knx = knex({
+    client: 'pg',
+    connection: {
+        host : '127.0.0.1',
+        user : 'postgres',
+        password : 'postgres',
+        database : 'todo_app'
+    }
+});
+
+const createCrumble = async ()=>{
+    await knx.raw('drop schema if exists crumble cascade');
+    const crumble = new Crumble();
+    await createModels(crumble);
+    return crumble;
+}
+
 @suite class TodosDb {
 
     @test async should_add_todo_to_events_store(){
-        let crumble = new Crumble();
-        await createModels(crumble);
+        let crumble = await createCrumble();
         await crumble.addEvent('todos', {
             action: 'create',
             uuid: crumble.uuid(),
@@ -20,7 +37,7 @@ chai.should();
     }
 
     @test async should_add_todo_to_read_model(){
-        let crumble = new Crumble();
+        let crumble = await createCrumble();
         await createModels(crumble);
         await crumble.addEvent('todos', {
             action: 'create',
@@ -33,7 +50,7 @@ chai.should();
     }
 
     @test async update_should_update_read_model(){
-        let crumble = new Crumble();
+        let crumble = await createCrumble();
         await createModels(crumble);
         const uuid = crumble.uuid();
         await crumble.addEvent('todos', {
@@ -54,7 +71,7 @@ chai.should();
     }
 
     @test async delete_should_clear_read_model(){
-        let crumble = new Crumble();
+        let crumble = await createCrumble();
         await createModels(crumble);
         const uuid = crumble.uuid();
         await crumble.addEvent('todos', {
