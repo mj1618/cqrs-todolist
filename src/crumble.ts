@@ -45,7 +45,7 @@ export class DBStore {
     }
 
     async readEvents(eventStore, from=0){
-        return await this.knex.withSchema('crumble').select().from(`${eventStore}_events`).where('id','>=',from);
+        return await this.knex.withSchema('crumble').select().from(`${eventStore}_events`).where('id','>=',from).limit(10000);
     }
 
     async snapshot(readModelName, state, lastId=0){
@@ -53,6 +53,7 @@ export class DBStore {
             last_id: lastId,
             state: JSON.stringify(state),
         });
+        await this.knex.withSchema('crumble').table(`${readModelName}_read_model`).where('last_id','<',lastId).del();
     }
 
     async latestSnapshot(readModelName){
